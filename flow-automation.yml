@@ -1,13 +1,13 @@
 name: Google Flow Automator
 
-# Menyala HANYA ketika dipanggil oleh API dari Google Apps Script
 on:
   repository_dispatch:
     types: [trigger-flow]
 
 jobs:
   generate-video:
-    runs-on: ubuntu-latest # Server Linux Gratis
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
 
     steps:
       - name: Checkout Repository
@@ -19,10 +19,9 @@ jobs:
           node-version: '18'
 
       - name: Install Dependencies
-        run: npm install puppeteer axios form-data
+        run: npm install
 
       - name: Jalankan Script Puppeteer
-        # Mengirim data dari GAS ke Script Node.js melalui Environment Variables
         env:
           IMAGE_DRIVE_ID: ${{ github.event.client_payload.imageId }}
           TIKTOK_URL: ${{ github.event.client_payload.tiktokUrl }}
@@ -30,9 +29,8 @@ jobs:
           COOKIE_SECURE_OSID: ${{ secrets.GOOGLE_SECURE_OSID }}
         run: node run-flow.js
         
-      # (Opsional) Jika Anda ingin videonya bisa didownload langsung dari halaman GitHub
-      - name: Upload Video Hasil ke GitHub Artifacts
-        uses: actions/upload-artifact@v3
+      - name: Upload Video Hasil ke Artifacts
+        uses: actions/upload-artifact@v4
         with:
-          name: Hasil-Video-Flow
+          name: Hasil-Video-Dance
           path: ./output/*.mp4
