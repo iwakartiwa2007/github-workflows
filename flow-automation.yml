@@ -1,0 +1,36 @@
+name: Google Flow Automator
+
+on:
+  repository_dispatch:
+    types: [trigger-flow]
+
+jobs:
+  generate-video:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Jalankan Script Puppeteer
+        env:
+          IMAGE_DRIVE_ID: ${{ github.event.client_payload.imageId }}
+          TIKTOK_URL: ${{ github.event.client_payload.tiktokUrl }}
+          COOKIE_OSID: ${{ secrets.GOOGLE_OSID }}
+          COOKIE_SECURE_OSID: ${{ secrets.GOOGLE_SECURE_OSID }}
+        run: node run-flow.js
+        
+      - name: Upload Video Hasil ke Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Hasil-Video-Dance
+          path: ./output/*.mp4
