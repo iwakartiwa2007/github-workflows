@@ -6,26 +6,30 @@ const { pipeline } = require('stream/promises');
 
 const IMAGE_DRIVE_ID = process.env.IMAGE_DRIVE_ID;
 const TIKTOK_URL = process.env.TIKTOK_URL;
-const OSID = process.env.COOKIE_OSID;
+const OSID = process.env.COOKIE_OSID; 
 const SECURE_OSID = process.env.COOKIE_SECURE_OSID;
 const HARDCODED_PROMPT = "*Create DT-VGM,DT+V2V+MOTION CONTROL+DANCING TRANSFER The woman original image Reference dancing synchronyze choreography video original Reference 100% Background based on the reference image.";
 
+const HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/117.0.0.0 Safari/537.36'
+};
+
 // Fungsi Unduh Foto dari Google Drive
 async function downloadDriveImage(fileId) {
-    const url = `https://drive.google.com/uc?export=download&id=${fileId}`;
+    const url = `[https://drive.google.com/uc?export=download&id=$](https://drive.google.com/uc?export=download&id=$){fileId}`;
     const filePath = path.join(__dirname, 'model_image.jpg');
-    const response = await axios({ method: 'GET', url: url, responseType: 'stream' });
+    const response = await axios({ method: 'GET', url: url, responseType: 'stream', headers: HEADERS });
     await pipeline(response.data, fs.createWriteStream(filePath));
     return filePath;
 }
 
 // Fungsi Unduh TikTok via TikWM
 async function downloadTikTokVideo(tiktokUrl) {
-    const apiUrl = `https://www.tikwm.com/api/?url=${encodeURIComponent(tiktokUrl)}`;
-    const response = await axios.get(apiUrl);
+    const apiUrl = `[https://www.tikwm.com/api/?url=$](https://www.tikwm.com/api/?url=$){encodeURIComponent(tiktokUrl)}`;
+    const response = await axios.get(apiUrl, { headers: HEADERS });
     const videoUrl = response.data.data.play;
     const filePath = path.join(__dirname, 'tiktok_ref.mp4');
-    const videoResponse = await axios({ method: 'GET', url: videoUrl, responseType: 'stream' });
+    const videoResponse = await axios({ method: 'GET', url: videoUrl, responseType: 'stream', headers: HEADERS });
     await pipeline(videoResponse.data, fs.createWriteStream(filePath));
     return filePath;
 }
@@ -43,14 +47,14 @@ async function downloadTikTokVideo(tiktokUrl) {
         });
         const page = await browser.newPage();
         
-        // Pasang Cookie Login
+        // Pasang Cookie Login - MENGGUNAKAN NAMA COOKIE YANG BENAR
         await page.setCookie(
-            { name: 'OSID', value: OSID, domain: '.google.com' },
-            { name: '__Secure-OSID', value: SECURE_OSID, domain: '.google.com' }
+            { name: '__Secure-1PSID', value: OSID, domain: '.google.com' },
+            { name: '__Secure-3PSID', value: SECURE_OSID, domain: '.google.com' }
         );
 
         console.log("3. Membuka Google Flow...");
-        await page.goto('https://flow.google.com/project/e7d9da23-8e20-45df-97e6-a66a6ae8ef93', { waitUntil: 'networkidle2' });
+        await page.goto('[https://flow.google.com/project/e7d9da23-8e20-45df-97e6-a66a6ae8ef93](https://flow.google.com/project/e7d9da23-8e20-45df-97e6-a66a6ae8ef93)', { waitUntil: 'networkidle2' });
 
         // Proses Upload
         const [fileChooser] = await Promise.all([
@@ -73,7 +77,6 @@ async function downloadTikTokVideo(tiktokUrl) {
         }, { timeout: 300000 });
 
         console.log("6. Mengunduh hasil dari web...");
-        // Mengeksekusi download dari dalam konteks browser (untuk handle Blob URL)
         const base64Data = await page.evaluate(async (url) => {
             const res = await fetch(url);
             const blob = await res.blob();
@@ -84,7 +87,6 @@ async function downloadTikTokVideo(tiktokUrl) {
             });
         }, videoUrl);
 
-        // Simpan file ke folder /output
         const buffer = Buffer.from(base64Data.split(',')[1], 'base64');
         if (!fs.existsSync('./output')) fs.mkdirSync('./output');
         fs.writeFileSync('./output/hasil_dance.mp4', buffer);
@@ -93,6 +95,6 @@ async function downloadTikTokVideo(tiktokUrl) {
         await browser.close();
     } catch (error) {
         console.error("Terjadi Kesalahan:", error);
-        process.exit(1); // Beri tahu GitHub Actions bahwa job gagal
+        process.exit(1); 
     }
 })();
